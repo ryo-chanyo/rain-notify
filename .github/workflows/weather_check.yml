@@ -1,28 +1,30 @@
-name: Weather Notify
+name: Weather Check
 
 on:
   schedule:
-    - cron: '*/15 22-12 * * *'  # JSTの7:00〜21:00はUTCで22:00〜12:00
-  workflow_dispatch:  # 手動実行も可能
+    - cron: '*/15 7-21 * * *'  # 7:00〜21:00まで15分ごとに実行
+  workflow_dispatch:  # 手動実行もできる
 
 jobs:
   notify:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.x
+          python-version: '3.x'
 
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run weather notify script
+      - name: Run weather_notify script
         env:
           YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
-          IFTTT_WEBHOOK_URL: ${{ secrets.IFTTT_WEBHOOK_URL }}
           LATITUDE: ${{ secrets.LATITUDE }}
           LONGITUDE: ${{ secrets.LONGITUDE }}
+          IFTTT_WEBHOOK_URL: ${{ secrets.IFTTT_WEBHOOK_URL }}
         run: python weather_notify.py
