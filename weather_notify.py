@@ -38,8 +38,8 @@ def main():
         #return
 
     app_id = os.getenv("YAHOO_APP_ID")
-    lat = os.getenv("34.9856838")
-    lon = os.getenv("136.2158133")
+    lat = os.getenv("34.5376861")
+    lon = os.getenv("136.6154472")
     #lat = os.getenv("LATITUDE")
     #lon = os.getenv("LONGITUDE")
     webhook_url = os.getenv("IFTTT_WEBHOOK_URL")
