@@ -1,56 +1,36 @@
 import os
 import requests
+import datetime
 
-# 環境変数から値を取得
-APP_ID = os.getenv("YAHOO_APP_ID")
-LAT = os.getenv("LATITUDE")
-LON = os.getenv("LONGITUDE")
-IFTTT_URL = os.getenv("IFTTT_WEBHOOK_URL")
+def get_weather(lat, lon, app_id):
+    url = f"https://map.yahooapis.jp/weather/V1/place?coordinates={lon},{lat}&appid={app_id}&output=json"
+    res = requests.get(url)
+    res.raise_for_status()
+    return res.json()
 
-# Yahoo!気象APIのエンドポイント（GeoJSON形式）
-url = f"https://map.yahooapis.jp/weather/V1/place?coordinates={LON},{LAT}&output=json&appid={APP_ID}"
+def is_rainy(weather_json):
+    features = weather_json["Feature"]
+    if not features:
+        return False
+    weather_elements = features[0]["Property"]["WeatherList"]["Weather"]
+    if not weather_elements:
+        return False
+    # 直近（15分後）の降水強度（mm/h）
+    rain_value = float(weather_elements[0]["Rainfall"])
+    return rain_value >= 0.1
 
-def get_weather_info():
-    try:
-        response = requests.get(url)
-        data = response.json()
+def send_ifttt_notification(url, message):
+    requests.post(url, json={"value1": message})
 
-        # 時間帯ごとの降水確率を取得（例として3時間ごと）
-        features = data["Feature"][0]["Property"]["WeatherList"]["Weather"]
+def main():
+    lat = os.getenv("LATITUDE")
+    lon = os.getenv("LONGITUDE")
+    app_id = os.getenv("YAHOO_APP_ID")
+    ifttt_url = os.getenv("IFTTT_WEBHOOK_URL")
 
-        message_lines = ["【今日の降水確率】"]
-        rain_expected = False
-
-        for f in features:
-            time = f["Date"]
-            rain = f["Rainfall"]
-            message_lines.append(f"{time}: {rain}%")
-            if float(rain) >= 30:  # 雨の可能性が高いと判断
-                rain_expected = True
-
-        message = "\n".join(message_lines)
-
-        if rain_expected:
-            message += "\n☔ 雨の可能性あり！傘を忘れずに。"
-
-        return message
-
-    except Exception as e:
-        return f"天気情報の取得に失敗しました: {str(e)}"
-
-def notify_ifttt(message):
-    if not IFTTT_URL:
-        print("IFTTT WebhookのURLが未設定です")
-        return
-
-    payload = {"value1": message}
-    try:
-        response = requests.post(IFTTT_URL, json=payload)
-        print("IFTTT通知を送信しました:", response.status_code)
-    except Exception as e:
-        print("IFTTT通知に失敗しました:", str(e))
+    weather = get_weather(lat, lon, app_id)
+    if is_rainy(weather):
+        send_ifttt_notification(ifttt_url, "15分後に雨が降ります ☔")
 
 if __name__ == "__main__":
-    weather_message = get_weather_info()
-    print(weather_message)
-    notify_ifttt(weather_message)
+    main()
