@@ -33,9 +33,9 @@ def send_ifttt_notification(webhook_url):
 
 def main():
     now = datetime.now()
-    if not (7 <= now.hour < 21):
-        print("通知時間外です")
-        return
+    #if not (7 <= now.hour < 21):
+        #print("通知時間外です")
+        #return
 
     app_id = os.getenv("YAHOO_APP_ID")
     lat = os.getenv("LATITUDE")
