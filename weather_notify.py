@@ -18,15 +18,15 @@ def get_weather_forecast(app_id, lat, lon):
 
 # 雨が降りそうか判断
 def will_rain_soon(weather_data):
-    try:
-        rainfall_values = weather_data["Feature"][0]["Property"]["WeatherList"]["Weather"]
-        for forecast in rainfall_values[:1]:  # 最初の15分間だけ見る
-            if float(forecast["Rainfall"]) > 0:
-                return True
-    except Exception as e:
-        print("Error in will_rain_soon:", e)
-    return False
-
+   # try:
+   #     rainfall_values = weather_data["Feature"][0]["Property"]["WeatherList"]["Weather"]
+  #      for forecast in rainfall_values[:1]:  # 最初の15分間だけ見る
+   #         if float(forecast["Rainfall"]) > 0:
+   #             return True
+  #  except Exception as e:
+ #       print("Error in will_rain_soon:", e)
+ #   return False
+    return True 
 # IFTTT通知
 def send_ifttt_notification(webhook_url):
     requests.post(webhook_url, json={ "value1": "15分後に雨が降ります ☔" })
@@ -47,7 +47,7 @@ def main():
         return
 
     weather = get_weather_forecast(app_id, lat, lon)
-  #  if weather and will_rain_soon(weather):
+    if weather and will_rain_soon(weather):
         send_ifttt_notification(webhook_url)
 
 if __name__ == "__main__":
