@@ -47,7 +47,7 @@ def main():
         return
 
     weather = get_weather_forecast(app_id, lat, lon)
-    if weather and will_rain_soon(weather):
+  #  if weather and will_rain_soon(weather):
         send_ifttt_notification(webhook_url)
 
 if __name__ == "__main__":
