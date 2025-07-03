@@ -29,7 +29,7 @@ def will_rain_soon(weather_data):
     return True 
 # IFTTT通知
 def send_ifttt_notification(webhook_url):
-    requests.post(webhook_url, json={ "value1": "15分後に雨が降ります ☔" })
+    requests.post(webhook_url, json={ "value1": "15分以内に雨が降ります ☔" })
 
 def main():
     now = datetime.now()
