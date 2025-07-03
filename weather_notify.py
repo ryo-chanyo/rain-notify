@@ -2,7 +2,7 @@ import os
 import requests
 from datetime import datetime
 
-# Yahooの天気API URL（地点の現在の天気予報：雨量など含む）
+# Yahooの天気APIからデータ取得
 def get_weather_forecast(app_id, lat, lon):
     url = "https://map.yahooapis.jp/weather/V1/place"
     params = {
@@ -16,27 +16,27 @@ def get_weather_forecast(app_id, lat, lon):
         return None
     return response.json()
 
-# 雨が降りそうか判断
-def will_rain_soon(weather_data):
-   # try:
-   #     rainfall_values = weather_data["Feature"][0]["Property"]["WeatherList"]["Weather"]
-  #      for forecast in rainfall_values[:1]:  # 最初の15分間だけ見る
-   #         if float(forecast["Rainfall"]) > 0:
-   #             return True
-  #  except Exception as e:
- #       print("Error in will_rain_soon:", e)
- #   return False
-    return True 
-# IFTTT通知
-def send_ifttt_notification(webhook_url):
-    requests.post(webhook_url, json={ "value1": "15分以内に雨が降ります ☔" })
+# 雨が降るか、どの程度かをチェックしてメッセージを返す
+def analyze_rainfall(weather_data):
+    try:
+        forecasts = weather_data["Feature"][0]["Property"]["WeatherList"]["Weather"]
+        for forecast in forecasts[:1]:  # 最初の15分だけ確認
+            rainfall = float(forecast["Rainfall"])
+            time_str = datetime.strptime(forecast["Date"], "%Y%m%d%H%M").strftime("%H:%M")
+            if rainfall > 0:
+                if rainfall < 1.0:
+                    return f"{time_str}頃、ポツポツ来そうです ☔"
+                else:
+                    return f"{time_str}頃、傘を忘れずに！強めの雨です ☔"
+    except Exception as e:
+        print("Error analyzing rainfall:", e)
+    return None
+
+# IFTTT通知を送信
+def send_ifttt_notification(webhook_url, message):
+    requests.post(webhook_url, json={"value1": message})
 
 def main():
-    now = datetime.now()
-    #if not (7 <= now.hour < 21):
-        #print("通知時間外です")
-        #return
-
     app_id = os.getenv("YAHOO_APP_ID")
     lat = os.getenv("LATITUDE")
     lon = os.getenv("LONGITUDE")
@@ -47,8 +47,13 @@ def main():
         return
 
     weather = get_weather_forecast(app_id, lat, lon)
-    if weather and will_rain_soon(weather):
-        send_ifttt_notification(webhook_url)
+    message = analyze_rainfall(weather)
+
+    if message:
+        print("通知内容:", message)
+        send_ifttt_notification(webhook_url, message)
+    else:
+        print("雨の予報はありません")
 
 if __name__ == "__main__":
     main()
