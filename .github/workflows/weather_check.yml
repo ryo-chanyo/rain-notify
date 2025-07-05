@@ -2,7 +2,7 @@ name: Weather Check
 
 on:
   schedule:
-    - cron: '*/15 7-21 * * *'  # 7:00〜21:00まで15分ごとに実行
+    - cron: '*/15 * * * *'  # 15分ごとに実行
   workflow_dispatch:  # 手動実行もできる
 
 jobs:
