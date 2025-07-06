@@ -10,11 +10,13 @@ def get_weather_forecast(app_id, lat, lon):
         "appid": app_id,
         "output": "json"
     }
-    response = requests.get(url, params=params)
-    if response.status_code != 200:
-        print("Failed to get weather data")
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print("❗天気データ取得エラー:", e)
         return None
-    return response.json()
 
 # 雨が降るか、どの程度かをチェックしてメッセージを返す
 def analyze_rainfall(weather_data):
@@ -29,31 +31,44 @@ def analyze_rainfall(weather_data):
                 else:
                     return f"{time_str}頃、傘を忘れずに！強めの雨です ☔"
     except Exception as e:
-        print("Error analyzing rainfall:", e)
+        print("❗雨量解析エラー:", e)
     return None
 
 # IFTTT通知を送信
 def send_ifttt_notification(webhook_url, message):
-    requests.post(webhook_url, json={"value1": message})
+    try:
+        response = requests.post(webhook_url, json={"value1": message})
+        if response.status_code == 200:
+            print("✅ 通知を送信しました")
+        else:
+            print(f"❌ 通知送信失敗: {response.status_code} {response.text}")
+    except Exception as e:
+        print("❗通知送信エラー:", e)
 
+# メイン処理
 def main():
+    print("🔍 天気チェック開始:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
     app_id = os.getenv("YAHOO_APP_ID")
     lat = os.getenv("LATITUDE")
     lon = os.getenv("LONGITUDE")
     webhook_url = os.getenv("IFTTT_WEBHOOK_URL")
 
     if not all([app_id, lat, lon, webhook_url]):
-        print("環境変数が足りません")
+        print("❗環境変数が足りません")
         return
 
     weather = get_weather_forecast(app_id, lat, lon)
-    message = analyze_rainfall(weather)
+    if not weather:
+        print("❌ 天気データ取得に失敗しました")
+        return
 
+    message = analyze_rainfall(weather)
     if message:
-        print("通知内容:", message)
+        print("📨 通知内容:", message)
         send_ifttt_notification(webhook_url, message)
     else:
-        print("雨の予報はありません")
+        print("🌤 雨の予報はありません")
 
 if __name__ == "__main__":
     main()
